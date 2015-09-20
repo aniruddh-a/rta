@@ -1,0 +1,6 @@
+{
+  // server configs
+  "Server": {
+    "port": 3000
+  }
+}

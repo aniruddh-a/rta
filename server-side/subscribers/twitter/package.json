@@ -1,0 +1,13 @@
+{
+  "name": "twitter-subscriber",
+  "version": "0.0.1",
+  "description": "Twitter Subscriber",
+  "main": "twitter-subscriber.js",
+  "author": "Aniruddh Adkar",
+  "license": "MIT",
+  "dependencies": {
+    "config": "^1.16.0",
+    "request": "^2.62.0",
+    "twit": "^2.1.0"
+  }
+}

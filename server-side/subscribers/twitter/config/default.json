@@ -1,0 +1,19 @@
+{
+  // Twitter module configs
+  "Twitter": {
+    "consumerConfig": {
+      "consumerKey": "LrPomU1Ds1inGB01yaB1taf4Q",
+      "consumerSecret": "Mm6Q3W8Mz9j5DcTs2KGXL9JpZZWBGq3RpnbxScODUCHBEXhngW"
+    },
+    "accessConfig": {
+      "accessToken": "62817422-6xD4dIJdbfPa0tYjgvqzQY6QYN2yMogHxKKDHBPuS",
+      "accessTokenSecret": "WEQ4oJXOg6d5GE7yY302hkKe8HG0Y6EWT1aT2mWVdumDM"
+    },
+    "limitsConfig": {
+      "tweetsCount": 250
+    }
+  },
+  "Server": {
+    "url" : "http://localhost:3000/message"
+  }
+}
