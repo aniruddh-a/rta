@@ -5,6 +5,8 @@
 
 var Twit = require('twit');
 var fs = require('fs');
+var express = require('express');
+var bodyParser = require('body-parser')
 var config = require('config');
 var request = require('request');
 
@@ -14,6 +16,8 @@ var limitsConfig = config.get('Twitter.limitsConfig');
 
 var serverConfig = config.get('Server');
 
+var LISTEN_PORT = 5000;
+var userToStreamMappings = [];
 
 var Twit = new Twit({
     consumer_key:         consumerConfig.consumerKey
@@ -22,25 +26,95 @@ var Twit = new Twit({
     , access_token_secret:  accessConfig.accessTokenSecret
 });
 
+var app = express();
 
-//susbcribe to stream for tweets from twitter
-var twitterStream = Twit.stream('statuses/filter', { track: 'apple' });
+var allowCrossDomain = function(req, res, next) {
 
-twitterStream.on('tweet', function (tweet) {
-    //console.log('tweet' + JSON.stringify(tweet));
-    try{
-        postTwitterDataToServer(tweet);
-    }catch(e){
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
 
+    // allow options method  - sent by browser to determine allowed methods for URI
+    if ('OPTIONS' == req.method) {
+        res.send(200);
     }
+    else {
+        next();
+    }
+};
+
+app.use(allowCrossDomain);
+
+app.use(bodyParser.json());
+
+app.post('/updateStream', function(req, res){
+    console.log('received for update stream' + req.body.queryTerm);
+    var userId = req.body.userId;
+    var domainName = req.body.domainName;
+
+    //find stream from mappings and stop it
+    var streamCount = -1;
+    for(var count=0; count < userToStreamMappings.length ; count ++){
+        if(userToStreamMappings[count].userId == userId && userToStreamMappings[count].domainName == domainName){
+            var stream = userToStreamMappings[count].stream;
+            stream.stop();
+            streamCount = count;
+            break;
+        }
+    }
+    if(streamCount != -1){
+        userToStreamMappings.splice(streamCount, 1);
+    }
+
+    var twitterStream = Twit.stream('statuses/filter', { track: req.body.queryTerm });
+    var userObj = {
+        userId: userId,
+        domainName: domainName
+    };
+
+    userToStreamMappings.push({
+        userId: req.body.userId,
+        domainName: req.body.domainName,
+        stream : twitterStream
+    });
+
+    twitterStream.on('tweet', function (tweet) {
+        try{
+            postTwitterDataToServer(tweet,userObj);
+        }catch(e){
+
+        }
+    });
+    res.send();
 });
 
+app.post('/stopStream',function(req, res){
+    var userId = req.body.userId;
+    var domainName = req.body.domain;
+
+    //find stream from mappings and stop it
+    var streamCount = -1;
+    for(var count=0; count < userToStreamMappings.length ; count ++){
+        if(userToStreamMappings[count].userId == userId && userToStreamMappings[count].domainName == domainName){
+            var stream = userToStreamMappings[count].stream;
+            stream.stop();
+            streamCount = count;
+            break;
+        }
+    }
+    if(streamCount != -1){
+        userToStreamMappings.splice(streamCount, 1);
+    }
+})
+
+
 //post to server
-function postTwitterDataToServer(tweet){
+function postTwitterDataToServer(tweet,userObj){
     var obj = {
         source: 'twitter',
         message: tweet.text,
-        originalObject: tweet
+        originalObject: tweet,
+        user: userObj
     };
 
     request({
@@ -51,3 +125,6 @@ function postTwitterDataToServer(tweet){
         console.log('error' + error);
     });
 }
+
+app.listen(LISTEN_PORT);
+console.log("Twitter subscriber listening on port :"+LISTEN_PORT);

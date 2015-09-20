@@ -1,0 +1,4 @@
+[{
+	"name" : "twitter-subscriber",
+	"url" : "http://localhost:5000/updateStream"
+}]

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Signin </title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="./bootstrap-paper.css" rel="stylesheet">
+    <link href="./app.css" rel="stylesheet">
+
+    <script src="./jquery-2.1.4.min.js"></script>
+    <script src="./jquery.cookie.js"></script>
+    <!-- <script src="https://cdn.firebase.com/js/client/2.2.9/firebase.js"></script> -->
+    <script src="http://www.parsecdn.com/js/parse-1.6.2.min.js"></script>
+
+  </head>
+
+  <body>
+
+    <!-- container -->
+    <div id="queryTermsComponent" class="container width-40">
+      <form class="form-signin">
+        <h2 class="form-signin-heading">Please update your query terms</h2>
+        <div id="listContainer"></div>
+        <label for="inputQuery" class="sr-only">Query terms</label>
+        <input type="text" id="inputQuery" class="form-control" placeholder="" required="" autofocus="">
+        <div class="checkbox">
+          
+        </div>        
+        <button type="button" id="updateQueryBtn"class="btn btn-lg btn-primary btn-block" >Submit</button>
+      </form>
+
+    </div>
+    <!-- /container -->
+
+
+
+    <!-- container -->
+    <div id="mapComponent" class="container width-4 hide">
+
+      <h1> map </h1>
+
+    </div>
+    <!-- /container -->
+
+</body></html>
+
+<script type="text/javascript">
+Parse.initialize("Xe28AO2DBElJsgfN43uBr0KsPrArAYi74iiY3Pc1", "tEBWhmPwVlsPpkMxqg7ioEd9mGj1xePuz9tSn7IO");
+
+  // $('#loginComponent').hide();
+  
+  var currentUser = null;
+  var currentUserKey = null;
+  getUser();
+
+
+  $('#updateQueryBtn').on('click',updateQueryTerms);
+
+  function getUser(email){
+    email = "foo@bar.com";
+
+    var Consumer = Parse.Object.extend("Consumer");
+    var query = new Parse.Query(Consumer);
+    query.equalTo("email", email);
+    query.first({
+      success: function(object) {
+        currentUser = object;
+        $('#inputQuery').val(currentUser.get("queryTerm"));
+        var selectList = "<label> Domain </label> " + "<select name='domain'>";      
+        selectList += "<option>" + currentUser.get("domainName") + "</option>";        
+        selectList += "</select>";
+        $('#listContainer').html(selectList);
+      },
+      error: function(error) {
+        alert("Error: " + error.code + " " + error.message);
+      }
+    });
+
+
+
+    
+  }
+
+  function updateQueryTermsUI(){
+    //fetch domains from currentuser and show them
+    var selectList = "<label> Domain </label> " + "<select name='domains'>";
+    for (var count = 0; count < currentUser.domains.length; count++) {
+        selectList += "<option>" + currentUser.domains[count].name + "</option>";
+    }
+    selectList += "</select>";
+    $('#listContainer').html(selectList);
+
+    var checkboxList = "";
+    for (var count = 0; count < currentUser.domains.length; count++) {
+        var currentDomain = currentUser.domains[count];
+        var prefKeys = Object.keys(currentDomain.preferences);
+        for(var anotherCount = 0; anotherCount < prefKeys.length ; anotherCount++ ){
+          checkboxList += '<label class="queryTermsPrefs">  <input type="checkbox" value="'+ prefKeys[anotherCount] + '" checked > '+ prefKeys[anotherCount] + '</label>';
+        }
+
+        $('#inputQuery').val(currentDomain.queryTerm);
+    }
+
+    $('#queryTermsComponent').find('.checkbox').html(checkboxList);
+
+    $('#queryTermsComponent').show();
+  }
+
+  function updateQueryTerms(){
+    var obj = {
+      "userId": currentUser.id,
+      "domainName": currentUser.get("domainName"),
+      "queryTerm": $('#inputQuery').val(),
+      "email": currentUser.get("email")
+    };
+
+    $.ajax({
+      type: "POST",
+      url: 'http://localhost:3000/updateUser',
+      contentType: 'application/json',
+      data: JSON.stringify(obj),
+      success: function(){
+
+      },
+      content: 'json'
+    });
+
+  }
+
+  function signin(){
+    console.log('inside signin');
+    var username = $('#inputEmail').val()
+    var password = $('#inputPassword').val();
+
+    Parse.User.logIn(username, password, {
+      success: function(user) {      
+        console.log("Authenticated successfully with payload:", authData);
+        $('#loginComponent').hide();
+        $('#mapComponent').show();
+        getUser(username);
+      },
+      error: function(user, error) {
+        alert('Sorry login failed');
+      }
+    });
+    
+  }
+
+</script>

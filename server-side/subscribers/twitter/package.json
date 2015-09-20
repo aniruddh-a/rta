@@ -6,7 +6,9 @@
   "author": "Aniruddh Adkar",
   "license": "MIT",
   "dependencies": {
+    "body-parser": "^1.14.0",
     "config": "^1.16.0",
+    "express": "^4.13.3",
     "request": "^2.62.0",
     "twit": "^2.1.0"
   }
