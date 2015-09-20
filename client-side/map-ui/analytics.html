@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+ <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.3/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/1.6.9/topojson.min.js"></script>
+
+
+<script src="datamaps.usa.js"></script>
+<script src="datamaps.world.js"></script>
+<script src="datamaps.all.js"></script>
+<script src="firebase.js"></script>
+
+<div id="container" style="position: relative; width: 500px; height: 300px;"></div>
+<script>
+
+var ref = new Firebase("https://crackling-heat-8147.firebaseio.com/");
+var tmp;
+ref.on("value", function(snapshot) {
+  
+  tmp=snapshot.val();
+  
+//    console.log(tmp.email);
+}, function (errorObject) {
+  console.log("The read failed: " + errorObject.code);
+});
+
+    var map = new Datamap({
+	
+        element: document.getElementById('container'),
+		scope: 'usa',
+        fills: {
+            POSITIVE: '#afafaf',
+            NEGATIVE: '#123456',
+            NEUTRAL: 'blue',
+            UNKNOWN: 'rgb(0,0,0)',
+            defaultFill: 'green'
+        },
+	
+		data : {tmp}
+    });
+	
+	
+	  ref.on("child_added", function(snapshot, prevChildKey) {
+  var newPost = snapshot.val();
+  var j=0;
+  var new_array=[];
+  var fillkeyval ='NEUTRAL';
+  $.each(newPost, function (i, row) {
+  
+  
+ console.log("Loc is"+newPost.locations[j].state + "Count is "  +newPost.locations[j].count);
+ if(newPost.locations[j].count>0){
+console.log("positive"+"Loc is"+newPost.locations[j].state + "Count is "  +newPost.locations[j].count);
+ fillKeyval='POSITIVE';
+ }
+
+ else if(newPost.locations[j].count<0){
+ fillKeyval='NEGATIVE';}
+ var obj=[];
+
+ var obj = Object.create({fillKey: fillKeyval, numberOfThings: newPost.locations[j].count})
+ var key=newPost.locations[j].state;
+ var ob= {};
+ 
+ 
+ var fieldkey="fillKey";
+ var numberOfThingskey="numberOfThings";
+ 
+ ob[key]=obj;
+
+
+ j++;
+  map.updateChoropleth(
+   
+ob
+  
+);
+   });
+     });
+	
+
+    
+    map.legend();
+</script>
+</head>
+</html>
